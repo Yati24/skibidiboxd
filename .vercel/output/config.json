@@ -1,0 +1,51 @@
+{
+	"version": 3,
+	"routes": [
+		{
+			"src": "/_app/immutable/.+",
+			"headers": {
+				"cache-control": "public, immutable, max-age=31536000"
+			}
+		},
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "^/?(?:/__data.json)?$",
+			"dest": "/"
+		},
+		{
+			"src": "^/api/tmdb/search/?(?:/__data.json)?$",
+			"dest": "/api/tmdb/search"
+		},
+		{
+			"src": "^/api/tmdb/trending/?(?:/__data.json)?$",
+			"dest": "/api/tmdb/trending"
+		},
+		{
+			"src": "^/collections/?(?:/__data.json)?$",
+			"dest": "/collections"
+		},
+		{
+			"src": "^/collections/([^/]+?)/?(?:/__data.json)?$",
+			"dest": "/collections/[slug]"
+		},
+		{
+			"src": "^/login/?(?:/__data.json)?$",
+			"dest": "/login"
+		},
+		{
+			"src": "^/movie/([^/]+?)/?(?:/__data.json)?$",
+			"dest": "/movie/[id]"
+		},
+		{
+			"src": "^/search/?(?:/__data.json)?$",
+			"dest": "/search"
+		},
+		{
+			"src": "/.*",
+			"dest": "/![-]/catchall"
+		}
+	],
+	"overrides": {}
+}

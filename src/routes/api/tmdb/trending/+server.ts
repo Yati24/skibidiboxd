@@ -27,7 +27,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const page = url.searchParams.get('page') || '1';
 
 	try {
-		const data = await fetchFromTMDB(`/trending/movie/week?page=${page}`);
+		const data = await fetchFromTMDB(`/trending/movie/week?language=fr-FR&page=${page}`);
 		return new Response(JSON.stringify(data), {
 			status: 200,
 			headers: { 'Content-Type': 'application/json' }

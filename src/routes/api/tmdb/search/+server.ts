@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	try {
 		const data = await fetchFromTMDB(
-			`/search/movie?query=${encodeURIComponent(query)}&page=${page}`
+			`/search/movie?query=${encodeURIComponent(query)}&language=fr-FR&page=${page}`
 		);
 		return new Response(JSON.stringify(data), {
 			status: 200,
