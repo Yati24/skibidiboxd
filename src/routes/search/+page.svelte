@@ -1,12 +1,18 @@
 <script lang="ts">
+	// helper pour construire les urls des affiches
 	import { getPosterUrl } from '$lib/api/tmdb'
+	// types pour les donnees de la page
 	import type { PageData } from './$types'
+	// definition de type pour les films
 	import type { Movie } from '$lib/types/tmdb'
 
 	let { data }: { data: PageData } = $props()
 
+	const PER_PAGE = 25
+	let page = $state(1)
 	let sortOption: string = $state('popularity_desc')
 
+	// trie les films selon l'option de tri selectionnee
 	let sortedMovies: Movie[] = $derived.by(() => {
 		const movies = data.movies
 		if (!movies.length) return []
@@ -34,11 +40,24 @@
 
 		return sorted
 	})
+
+	// decoupe les films tries pour la page actuelle
+	let pagedMovies = $derived(
+		sortedMovies.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+	)
+	// nombre total de pages de pagination
+	let totalPages = $derived(Math.ceil(sortedMovies.length / PER_PAGE))
+
+	// va a une page specifique et scroll en haut
+	function goTo(p: number) {
+		page = p
+		window.scrollTo({ top: 0, behavior: 'smooth' })
+	}
 </script>
 
 <section class="relative rounded-xl overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 p-8 md:p-12 mb-8">
 	<div class="relative z-10">
-		<h2 class="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+		<h2 class="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 bg-clip-text text-transparent">
 			Rechercher un film
 		</h2>
 		<p class="text-slate-300 text-lg">Trouvez n'importe quel film et ajoutez-le à votre watchlist</p>
@@ -51,11 +70,11 @@
 		name="q"
 		value={data.query}
 		placeholder="Rechercher un film..."
-		class="flex-1 px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+		class="flex-1 px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-yellow-500 transition-colors"
 	/>
 	<button
 		type="submit"
-		class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-lg transition-all"
+		class="px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-lg transition-all"
 	>
 		Rechercher
 	</button>
@@ -77,7 +96,7 @@
 			Trier par
 			<select
 				bind:value={sortOption}
-				class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors"
+				class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-yellow-500 transition-colors"
 			>
 				<option value="popularity_desc">Popularité</option>
 				<option value="rating_desc">Note (meilleures d'abord)</option>
@@ -88,7 +107,7 @@
 	</div>
 
 	<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-		{#each sortedMovies as movie (movie.id)}
+		{#each pagedMovies as movie (movie.id)}
 			<a
 				href="/movie/{movie.id}"
 				class="group block rounded-xl overflow-hidden bg-slate-800 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.03]"
@@ -114,6 +133,27 @@
 			</a>
 		{/each}
 	</div>
+
+	{#if totalPages > 1}
+		<div class="flex items-center justify-center gap-2 mt-8">
+			<button
+				onclick={() => goTo(page - 1)}
+				disabled={page <= 1}
+				class="px-3 py-1.5 text-sm rounded-lg transition-colors disabled:opacity-30 {page <= 1 ? 'bg-slate-800 text-slate-500' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}"
+			>‹</button>
+			{#each Array.from({ length: totalPages }, (_, i) => i + 1) as p}
+				<button
+					onclick={() => goTo(p)}
+					class="px-3 py-1.5 text-sm rounded-lg transition-colors {p === page ? 'bg-yellow-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}"
+				>{p}</button>
+			{/each}
+			<button
+				onclick={() => goTo(page + 1)}
+				disabled={page >= totalPages}
+				class="px-3 py-1.5 text-sm rounded-lg transition-colors disabled:opacity-30 {page >= totalPages ? 'bg-slate-800 text-slate-500' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}"
+			>›</button>
+		</div>
+	{/if}
 {:else if data.query && !data.error}
 	<div class="text-center py-16">
 		<p class="text-slate-400 text-lg">Aucun résultat pour "<span class="text-white">{data.query}</span>"</p>

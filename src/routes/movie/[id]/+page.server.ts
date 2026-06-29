@@ -1,20 +1,26 @@
+// page de detail d'un film: recupere les donnees du film et gere le toggle de la watchlist
 import { error, fail, redirect } from '@sveltejs/kit'
+// types pour le chargement serveur et les actions
 import type { PageServerLoad, Actions } from './$types'
+// type de detail de film
 import type { MovieDetail } from '$lib/types/tmdb'
+// variables d'env cote serveur
 import { env } from '$env/dynamic/private'
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 
 /**
- * Récupère les détails complets d'un film depuis l'API TMDB.
+ * Recupere les details complets d'un film depuis l'api tmdb.
  * Lance une erreur 404 si le film n'existe pas.
  */
+// recupere les details complets d'un film depuis tmdbb
 async function fetchMovieDetail(movieId: number): Promise<MovieDetail> {
 	const apiKey = env.VITE_TMDB_API_KEY
 	if (!apiKey) {
 		throw new Error('TMDB API key not configured')
 	}
 
+	// appelle l'endpoint de detail de film tmdb
 	const response = await fetch(`${TMDB_BASE_URL}/movie/${movieId}?language=fr-FR`, {
 		headers: {
 			Authorization: `Bearer ${apiKey}`,
@@ -33,6 +39,7 @@ async function fetchMovieDetail(movieId: number): Promise<MovieDetail> {
 	return response.json()
 }
 
+// charge les details du film et verifie s'il est dans la watchlist de l'utilisateur
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const movieId = parseInt(params.id, 10)
 
@@ -41,16 +48,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	try {
+		// recupere les details du film et la session en parallele
 		const [movie, session] = await Promise.all([
 			fetchMovieDetail(movieId),
 			locals.getSession()
 		])
 
-		// Vérifie si le film est déjà dans les favoris de l'utilisateur connecté
+		// vérifie si le film est déjà dans les favoris de l'utilisateur connecté
 		let isFavorite = false
 		if (session) {
 			const user = await locals.getUser()
 			if (user) {
+				// verifie si ce film est dans la liste des films vus de l'utilisateur
 				const { data } = await locals.supabase
 					.from('watched_movies')
 					.select('id')
@@ -79,8 +88,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 }
 
 export const actions: Actions = {
+	// bascule le statut vu d'un film pour l'utilisateur actuel
 	toggleFavorite: async ({ request, locals, params }) => {
-		// 1. Vérifier l'authentification via getUser() (appel serveur sécurisé)
+		// 1. vérifier l'authentification via getuser() (appel serveur sécurisé)
 		const user = await locals.getUser()
 		if (!user) {
 			return fail(401, { error: 'Vous devez être connecté' })
@@ -91,7 +101,8 @@ export const actions: Actions = {
 			return fail(400, { error: 'ID de film invalide' })
 		}
 
-		// 2. Vérifier si le film est déjà dans la watchlist
+		// 2. vérifier si le film est déjà dans la watchlist
+		// verifie si le film est deja dans la watchlist
 		const { data: existing } = await locals.supabase
 			.from('watched_movies')
 			.select('id')
@@ -99,6 +110,7 @@ export const actions: Actions = {
 			.eq('tmdb_id', tmdbId)
 			.maybeSingle()
 
+		// parse les donnees du formulaire pour le parametre de redirection
 		const formData = await request.formData()
 		const fromParam = formData.get('from')
 		const redirectUrl = typeof fromParam === 'string' && fromParam
@@ -106,6 +118,7 @@ export const actions: Actions = {
 			: `/movie/${tmdbId}`
 
 		if (existing) {
+			// retire le film de la liste des films vus
 			const { error: deleteError } = await locals.supabase
 				.from('watched_movies')
 				.delete()
@@ -118,6 +131,7 @@ export const actions: Actions = {
 
 			redirect(302, redirectUrl)
 		} else {
+			// ajoute le film a la liste des films vus
 			const { error: insertError } = await locals.supabase
 				.from('watched_movies')
 				.insert({ user_id: user.id, tmdb_id: tmdbId })

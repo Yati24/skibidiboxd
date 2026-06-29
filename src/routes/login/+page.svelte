@@ -1,5 +1,7 @@
 <script lang="ts">
+	// enhancement de formulaire sveltekit pour amelioration progressive
 	import { enhance } from '$app/forms'
+	// type pour la focntion de soumission du formulaire
 	import type { SubmitFunction } from '@sveltejs/kit'
 
 	let mode: 'login' | 'signup' = $state('login')
@@ -8,6 +10,7 @@
 	let formError: string | null = $state(null)
 	let formSuccess: string | null = $state(null)
 
+	// gere le resultat du formulaire pour afficher les messages de succes ou d'erreurr
 	const handleResult: SubmitFunction = () => {
 		return async ({ result }) => {
 			if (result.type === 'failure') {
@@ -20,6 +23,7 @@
 		}
 	}
 
+	// bascule entre le mode connexion et incription
 	function toggleMode() {
 		mode = mode === 'login' ? 'signup' : 'login'
 		formError = null
@@ -31,7 +35,7 @@
 	<div class="w-full max-w-md">
 		<div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
 			<div class="text-center mb-8">
-				<h1 class="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+				<h1 class="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent">
 					{mode === 'login' ? 'Bon retour' : 'Créer un compte'}
 				</h1>
 				<p class="text-slate-400 mt-2">
@@ -66,7 +70,7 @@
 						required
 						bind:value={email}
 						placeholder="vous@exemple.fr"
-						class="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+						class="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-yellow-500 transition-colors"
 					/>
 				</div>
 
@@ -80,13 +84,13 @@
 						minlength={6}
 						bind:value={password}
 						placeholder="••••••••"
-						class="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+						class="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-yellow-500 transition-colors"
 					/>
 				</div>
 
 				<button
 					type="submit"
-					class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-lg transition-all"
+					class="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white font-semibold rounded-lg transition-all"
 				>
 					{mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
 				</button>
@@ -96,7 +100,7 @@
 				<button
 					type="button"
 					onclick={toggleMode}
-					class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+					class="text-sm text-yellow-400 hover:text-yellow-300 transition-colors"
 				>
 					{mode === 'login'
 						? "Pas encore de compte ? S'inscrire"

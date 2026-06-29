@@ -1,15 +1,20 @@
+// endpoint api pour rechercher des films sur tmdb
 import type { RequestHandler } from './$types';
+// type de reponse tmdb
 import type { TMDBResponse } from '$lib/types/tmdb';
+// variables d'env cote serveur
 import { env } from '$env/dynamic/private';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
+// recupere les donnees depuis l'api tmdb
 async function fetchFromTMDB(url: string): Promise<TMDBResponse> {
 	const apiKey = env.VITE_TMDB_API_KEY;
 	if (!apiKey) {
 		throw new Error('TMDB API key not configured');
 	}
 
+	// appelle l'endpoint tmdb
 	const response = await fetch(`${TMDB_BASE_URL}${url}`, {
 		headers: {
 			'Authorization': `Bearer ${apiKey}`,
@@ -23,6 +28,7 @@ async function fetchFromTMDB(url: string): Promise<TMDBResponse> {
 	return response.json();
 }
 
+// gere la requete get pour la recherche de films
 export const GET: RequestHandler = async ({ url }) => {
 	const query = url.searchParams.get('query');
 	const page = url.searchParams.get('page') || '1';
@@ -35,6 +41,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	try {
+		// recherche des films sur tmdb par requete
 		const data = await fetchFromTMDB(
 			`/search/movie?query=${encodeURIComponent(query)}&language=fr-FR&page=${page}`
 		);

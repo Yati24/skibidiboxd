@@ -1,25 +1,47 @@
 <script lang="ts">
+	// helper pour construire les urls des affiches
 	import { getPosterUrl } from '$lib/api/tmdb'
+	// etat partage de la watchlist
 	import { watchlist } from '$lib/watchlist.svelte'
+	// types pour les donnees de la page
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()
 
+	const PER_PAGE = 25
+	let page = $state(1)
+
+	// initialise la watchlist depuis les donnees serveur
 	$effect(() => {
 		if (data.watchedIds) {
 			watchlist.init(data.watchedIds)
 		}
 	})
 
+	// combien de films dans cette colletion sont vus
 	let watchedCount = $derived(
 		data.movieIds.filter((id) => watchlist.has(id)).length
 	)
 
+	// pourcentage de la colletion completee
 	let percentage = $derived(
 		data.totalResults > 0
 			? Math.round((watchedCount / data.totalResults) * 100)
 			: 0
 	)
+
+	// decoupe les films pour la page actuelle
+	let pagedMovies = $derived(
+		data.movies.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+	)
+	// nombre total de pages de pagination
+	let totalPages = $derived(Math.ceil(data.movies.length / PER_PAGE))
+
+	// va a une page specifique et scroll en haut
+	function goTo(p: number) {
+		page = p
+		window.scrollTo({ top: 0, behavior: 'smooth' })
+	}
 </script>
 
 {#if data.error}
@@ -34,7 +56,7 @@
 
 <section class="relative rounded-xl overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 p-8 md:p-12 mb-8">
 	<div class="relative z-10">
-		<h2 class="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+		<h2 class="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 bg-clip-text text-transparent">
 			{data.collection.name}
 		</h2>
 		<p class="text-slate-300 text-lg mb-4">{data.collection.description}</p>
@@ -47,7 +69,7 @@
 			</div>
 			<div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
 				<div
-					class="h-full rounded-full transition-all duration-500 ease-out {percentage === 100 ? 'bg-emerald-500' : 'bg-blue-600'}"
+					class="h-full rounded-full transition-all duration-500 ease-out {percentage === 100 ? 'bg-emerald-500' : 'bg-amber-500'}"
 					style="width: {percentage}%"
 				></div>
 			</div>
@@ -57,7 +79,7 @@
 
 {#if data.movies.length > 0}
 	<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-		{#each data.movies as movie (movie.id)}
+		{#each pagedMovies as movie (movie.id)}
 			<a
 				href="/movie/{movie.id}?from=/collections/{data.collection.slug}"
 				class="group block rounded-xl overflow-hidden bg-slate-800 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.03]"
@@ -85,6 +107,27 @@
 			</a>
 		{/each}
 	</div>
+
+	{#if totalPages > 1}
+		<div class="flex items-center justify-center gap-2 mt-8">
+			<button
+				onclick={() => goTo(page - 1)}
+				disabled={page <= 1}
+				class="px-3 py-1.5 text-sm rounded-lg transition-colors disabled:opacity-30 {page <= 1 ? 'bg-slate-800 text-slate-500' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}"
+			>‹</button>
+			{#each Array.from({ length: totalPages }, (_, i) => i + 1) as p}
+				<button
+					onclick={() => goTo(p)}
+					class="px-3 py-1.5 text-sm rounded-lg transition-colors {p === page ? 'bg-yellow-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}"
+				>{p}</button>
+			{/each}
+			<button
+				onclick={() => goTo(page + 1)}
+				disabled={page >= totalPages}
+				class="px-3 py-1.5 text-sm rounded-lg transition-colors disabled:opacity-30 {page >= totalPages ? 'bg-slate-800 text-slate-500' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}"
+			>›</button>
+		</div>
+	{/if}
 {:else}
 	<div class="text-center py-16">
 		<p class="text-slate-400 text-lg">Aucun film dans cette collection</p>

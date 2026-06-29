@@ -39,6 +39,10 @@
 			"dest": "/movie/[id]"
 		},
 		{
+			"src": "^/profile/?(?:/__data.json)?$",
+			"dest": "/profile"
+		},
+		{
 			"src": "^/search/?(?:/__data.json)?$",
 			"dest": "/search"
 		},

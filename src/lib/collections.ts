@@ -1,5 +1,8 @@
+// definitions de colletions et fonctions de generation
+// type de colletion depuis les types tmdb
 import type { CollectionDef } from '$lib/types/tmdb'
 
+// liste des genres avec ids tmdbb et noms francais
 const GENRES: { id: number; name: string }[] = [
 	{ id: 28, name: 'Action' },
 	{ id: 12, name: 'Aventure' },
@@ -22,6 +25,7 @@ const GENRES: { id: number; name: string }[] = [
 	{ id: 37, name: 'Western' }
 ]
 
+// liste des langues avec codes et noms francais
 const LANGUAGES: { code: string; name: string }[] = [
 	{ code: 'fr', name: 'Français' },
 	{ code: 'en', name: 'Anglais' },
@@ -35,6 +39,7 @@ const LANGUAGES: { code: string; name: string }[] = [
 	{ code: 'pt', name: 'Portugais' }
 ]
 
+// liste des realisateurs avec ids tmdb et noms
 const DIRECTORS: { id: number; name: string }[] = [
 	{ id: 138, name: 'Quentin Tarantino' },
 	{ id: 525, name: 'Christopher Nolan' },
@@ -68,6 +73,7 @@ const DIRECTORS: { id: number; name: string }[] = [
 	{ id: 5919, name: 'Hayao Miyazaki' }
 ]
 
+// classifications avec labels francais
 const CERTIFICATIONS: { code: string; label: string }[] = [
 	{ code: 'G', label: 'Tout public' },
 	{ code: 'PG', label: 'Accompagnement souhaité' },
@@ -76,6 +82,7 @@ const CERTIFICATIONS: { code: string; label: string }[] = [
 	{ code: 'NC-17', label: 'Interdit -17 ans' }
 ]
 
+// combinaisons de genres pour les collections mixtes
 const GENRE_COMBOS: { slug: string; name: string; genre1: number; genre2: number }[] = [
 	{ slug: 'action-sf', name: 'Action & Science-Fiction', genre1: 28, genre2: 878 },
 	{ slug: 'comedie-romance', name: 'Comédies romantiques', genre1: 35, genre2: 10749 },
@@ -89,6 +96,7 @@ const GENRE_COMBOS: { slug: string; name: string; genre1: number; genre2: number
 	{ slug: 'sf-horreur', name: 'Science-Fiction horrifique', genre1: 878, genre2: 27 }
 ]
 
+// definitions de collections basees sur des mots-cles
 const KEYWORD_SLUGS: { slug: string; name: string; keywordId: number }[] = [
 	{ slug: 'oscars-best-picture', name: 'Oscars du meilleur film', keywordId: 189952 },
 	{ slug: 'superhero', name: 'Super-héros', keywordId: 9715 },
@@ -110,6 +118,7 @@ const KEYWORD_SLUGS: { slug: string; name: string; keywordId: number }[] = [
 	{ slug: 'survival', name: 'Survie', keywordId: 10003 }
 ]
 
+// cree un slug url-safe a partir d'une chaine
 function makeSlug(label: string): string {
 	return label
 		.toLowerCase()
@@ -118,14 +127,12 @@ function makeSlug(label: string): string {
 		.replace(/^-|-$/g, '')
 }
 
-/**
- * Génère ~200 définitions de collections basées sur les données TMDB.
- */
+
 function generateCollections(): CollectionDef[] {
 	const collections: CollectionDef[] = []
 	let idCounter = 0
 
-	// 1. Par genre × 3 tris (~57 collections)
+
 	for (const genre of GENRES) {
 		collections.push({
 			slug: `genre-${genre.id}-popular`,
@@ -150,7 +157,8 @@ function generateCollections(): CollectionDef[] {
 		})
 	}
 
-	// 2. Par décennie (12 × 2 sorts = ~24 collections)
+	// collections par decennie avec tri populaire et top
+	// 2. par decennie (12 x 2 tris = ~24 collections)
 	for (let decade = 1910; decade <= 2020; decade += 10) {
 		const end = decade + 9
 		collections.push({
@@ -180,7 +188,7 @@ function generateCollections(): CollectionDef[] {
 		})
 	}
 
-	// 3. Par langue (10 × 2 sorts = ~20 collections)
+
 	for (const lang of LANGUAGES) {
 		collections.push({
 			slug: `lang-${lang.code}-popular`,
@@ -198,7 +206,7 @@ function generateCollections(): CollectionDef[] {
 		})
 	}
 
-	// 4. Par certification (5 × 2 sorts = ~10 collections)
+
 	for (const cert of CERTIFICATIONS) {
 		collections.push({
 			slug: `cert-${cert.code.toLowerCase()}-popular`,
@@ -216,7 +224,7 @@ function generateCollections(): CollectionDef[] {
 		})
 	}
 
-	// 5. Top listes diverses (~10 collections)
+
 	const topListDefs: CollectionDef[] = [
 		{ slug: 'top-rated-all', name: 'Mieux notés de tous les temps', description: 'Les films avec les meilleures notes sur TMDB', category: 'Top listes', discoverParams: { sort_by: 'vote_average.desc', 'vote_count.gte': '2000', language: 'fr-FR' } },
 		{ slug: 'most-popular', name: 'Les plus populaires', description: 'Les films les plus populaires du moment', category: 'Top listes', discoverParams: { sort_by: 'popularity.desc', language: 'fr-FR' } },
@@ -231,7 +239,7 @@ function generateCollections(): CollectionDef[] {
 	]
 	collections.push(...topListDefs)
 
-	// 6. Par réalisateur (30 collections)
+
 	for (const dir of DIRECTORS) {
 		collections.push({
 			slug: `director-${dir.id}`,
@@ -242,7 +250,7 @@ function generateCollections(): CollectionDef[] {
 		})
 	}
 
-	// 7. Combinaisons genre+genre (~10 collections)
+
 	for (const combo of GENRE_COMBOS) {
 		collections.push({
 			slug: combo.slug,
@@ -253,7 +261,7 @@ function generateCollections(): CollectionDef[] {
 		})
 	}
 
-	// 8. Par mot-clé (~18 collections)
+
 	for (const kw of KEYWORD_SLUGS) {
 		collections.push({
 			slug: `keyword-${kw.slug}`,
@@ -264,7 +272,7 @@ function generateCollections(): CollectionDef[] {
 		})
 	}
 
-	// 9. Années récentes (2021-2026 × 2 sorts = ~12 collections)
+
 	for (let year = 2021; year <= 2026; year++) {
 		collections.push({
 			slug: `year-${year}-popular`,
@@ -282,7 +290,6 @@ function generateCollections(): CollectionDef[] {
 		})
 	}
 
-	// 10. Fun — collections personnalisées
 
 	const FUN_COLLECTIONS: { slug: string; name: string; description: string; queries: string[]; max?: number }[] = [
 		{ slug: 'six-seven-67', name: 'SIX SEVEN 67', description: 'Le top 67 des films contenant "6", "7", "Six", "Seven" ou "67" dans leur titre', queries: ['six', 'seven', '6', '7', '67', 'sixty seven'], max: 67 },
@@ -317,7 +324,7 @@ function generateCollections(): CollectionDef[] {
 		})
 	}
 
-	// Déduplication par slug
+
 	const seen = new Set<string>()
 	return collections.filter((c) => {
 		if (seen.has(c.slug)) return false
@@ -326,7 +333,9 @@ function generateCollections(): CollectionDef[] {
 	})
 }
 
+
 export const ALL_COLLECTIONS = generateCollections()
+
 
 export const FEATURED_SLUGS = [
 	'top-rated-all',
@@ -343,6 +352,7 @@ export const FEATURED_SLUGS = [
 	'cult-classics',
 	'six-seven-67'
 ]
+
 
 export const CATEGORIES = [
 	'Par genre',

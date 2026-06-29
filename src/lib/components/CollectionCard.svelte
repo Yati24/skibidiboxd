@@ -1,5 +1,7 @@
 <script lang="ts">
+	// type de collection avec donnees d'apercu
 	import type { CollectionWithPreview } from '$lib/types/tmdb'
+	// store de watchlist reactif
 	import { watchlist } from '$lib/watchlist.svelte'
 	import { getPosterUrl } from '$lib/api/tmdb'
 
@@ -9,16 +11,19 @@
 
 	let { collection }: Props = $props()
 
+	// compte les films vus depuis la watchlist
 	let watchedCount = $derived(
 		collection.movieIds?.filter((id) => watchlist.has(id)).length ?? 0
 	)
 
+	// calcule le pourcentage de visionnage
 	let percentage = $derived(
 		collection.movieCount > 0
 			? Math.round((watchedCount / collection.movieCount) * 100)
 			: 0
 	)
 
+	// recupere jusqu'a 4 chemins d'affiches pour l'apercu
 	let previewPosters = $derived(
 		collection.posters?.slice(0, 4) ?? []
 	)
@@ -26,7 +31,7 @@
 
 <a
 	href="/collections/{collection.slug}"
-	class="block bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg hover:border-cyan-700 transition-all hover:shadow-xl group"
+	class="block bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-lg hover:border-yellow-700 transition-all hover:shadow-xl group"
 >
 	<!-- Mini-affiches en haut -->
 	{#if previewPosters.length > 0}
@@ -43,7 +48,7 @@
 	{/if}
 
 	<div class="flex items-center justify-between mb-3">
-		<h3 class="text-lg font-bold text-white group-hover:text-cyan-400 transition-colors">{collection.name}</h3>
+		<h3 class="text-lg font-bold text-white group-hover:text-yellow-400 transition-colors">{collection.name}</h3>
 		<span class="text-sm text-slate-400 shrink-0 ml-2">
 			{collection.movieCount} film{collection.movieCount > 1 ? 's' : ''}
 		</span>
@@ -53,7 +58,7 @@
 
 	<div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
 		<div
-			class="h-full rounded-full transition-all duration-500 ease-out {percentage === 100 ? 'bg-emerald-500' : 'bg-blue-600'}"
+			class="h-full rounded-full transition-all duration-500 ease-out {percentage === 100 ? 'bg-emerald-500' : 'bg-amber-500'}"
 			style="width: {percentage}%"
 		></div>
 	</div>

@@ -1,17 +1,23 @@
+// page colletions: construit tous les apercus de collections depuis tmdb
 import type { PageServerLoad } from './$types'
+// type d'apercu de colletion
 import type { CollectionWithPreview } from '$lib/types/tmdb'
+// toutes les definitions de collections et categories
 import { ALL_COLLECTIONS, CATEGORIES } from '$lib/collections'
+// variables d'env cote serveurr
 import { env } from '$env/dynamic/private'
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 const MAX_MOVIES = 100
 const PAGE_SIZE = 20
 
+// recupere une page de films depuis tmdb discover
 async function discoverPage(params: Record<string, string>, page: number): Promise<{ results: { id: number; poster_path: string | null }[]; total_results: number; total_pages: number } | null> {
 	const apiKey = env.VITE_TMDB_API_KEY
 	if (!apiKey) return null
 
 	const qs = new URLSearchParams({ ...params, page: String(page) }).toString()
+	// appelle l'endpoint discover de tmdb
 	const res = await fetch(`${TMDB_BASE_URL}/discover/movie?${qs}`, {
 		headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json;charset=utf-8' }
 	})
@@ -19,10 +25,12 @@ async function discoverPage(params: Record<string, string>, page: number): Promi
 	return res.json()
 }
 
+// recupere une page de films depuis la recherche tmdb
 async function searchPage(query: string, page: number): Promise<{ results: { id: number; poster_path: string | null; vote_average: number; vote_count: number; popularity: number }[] } | null> {
 	const apiKey = env.VITE_TMDB_API_KEY
 	if (!apiKey) return null
 
+	// appelle l'endpoint search de tmdb
 	const res = await fetch(`${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=fr-FR&page=${page}`, {
 		headers: { Authorization: `Bearer ${apiKey}` }
 	})
@@ -30,6 +38,7 @@ async function searchPage(query: string, page: number): Promise<{ results: { id:
 	return res.json()
 }
 
+// construit un objet d'apercu de collection avec les donnees de progression
 function buildPreview(def: typeof ALL_COLLECTIONS[number], movieIds: number[], posters: (string | null)[], movieCount: number, watchedIds: number[]): CollectionWithPreview {
 	const watchedCount = movieIds.filter((id) => watchedIds.includes(id)).length
 	return {
@@ -42,13 +51,16 @@ function buildPreview(def: typeof ALL_COLLECTIONS[number], movieIds: number[], p
 	}
 }
 
+// charge toutes les collections avec les apercus
 export const load: PageServerLoad = async ({ locals }) => {
+	// recupere la session actuelle
 	const session = await locals.getSession()
 
 	let watchedIds: number[] = []
 	if (session) {
 		const user = await locals.getUser()
 		if (user) {
+			// recupere les ids des films vus pour cet utilisateur
 			const { data: watchedRows } = await locals.supabase
 				.from('watched_movies')
 				.select('tmdb_id')
@@ -59,18 +71,21 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const allCollections: CollectionWithPreview[] = []
 
+	// traite les collections en lots de 10 pour le controle de concurrence
 	for (let i = 0; i < ALL_COLLECTIONS.length; i += 10) {
 		const batch = ALL_COLLECTIONS.slice(i, i + 10)
 
-		// Séparer les collections discover et search
+		// séparer les collections discover et search
 		const discoverDefs = batch.filter((d) => !d.searchQueries)
 		const searchDefs = batch.filter((d) => d.searchQueries)
 
-		// Traiter les discover collections
+		// traiter les discover collections
+		// recupere la premiere page pour toutes les collections discover en lot
 		const firstPages = await Promise.allSettled(
 			discoverDefs.map((def) => discoverPage(def.discoverParams!, 1))
 		)
 
+		// collecte les fetchs de pages supplementaires pour la pagination
 		const extraFetches: Promise<{ index: number; pageData: { results: { id: number; poster_path: string | null }[] } | null }>[] = []
 
 		for (let j = 0; j < discoverDefs.length; j++) {
@@ -119,9 +134,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 			allCollections.push(buildPreview(def, movieIds, allMovies.slice(0, 4).map((m) => m.poster_path), movieCount, watchedIds))
 		}
 
-		// Traiter les search collections
+		// traiter les search collections
 		for (const def of searchDefs) {
 			const maxMovies = def.maxMovies ?? MAX_MOVIES
+			// recupere toutes les pages pour toutes les requetes de recherche
 			const allResults = await Promise.all(
 				def.searchQueries!.map((q) =>
 					Promise.all(
@@ -147,6 +163,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				}
 			}
 
+			// tri par note decroissante
 			movies.sort((a, b) => (b.vote_average ?? 0) - (a.vote_average ?? 0))
 			const sliced = movies.slice(0, maxMovies)
 			const movieIds = sliced.map((m) => m.id)

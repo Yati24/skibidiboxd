@@ -1,13 +1,19 @@
 <script lang="ts">
+	// helpers pour les urls des affiches et images de fond
 	import { getPosterUrl, getBackdropUrl } from '$lib/api/tmdb'
+	// etat partage de la watchlist
 	import { watchlist } from '$lib/watchlist.svelte'
+	// store de la page courante pour lire les params url
 	import { page } from '$app/stores'
+	// types pour les donnees de la page
 	import type { PageData } from './$types'
 
 	let { data }: { data: PageData } = $props()
 
+	// recupere le param url 'from' pour la navigation retour
 	let fromUrl = $derived($page.url.searchParams.get('from'))
 
+	// synchronise l'etat de la watchlist avec les donnees serveur au chargement
 	$effect(() => {
 		if (data.isFavorite !== undefined && data.movie && data.session) {
 			if (data.isFavorite) {
@@ -32,7 +38,7 @@
 	{#if fromUrl}
 		<a
 			href={fromUrl}
-			class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 bg-slate-900/80 backdrop-blur-sm border border-slate-700 rounded-xl text-sm text-slate-300 hover:text-white hover:border-slate-500 transition-all shadow-lg"
+			class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 bg-slate-900/80 backdrop-blur-sm border border-slate-700 rounded-xl text-sm text-slate-300 hover:text-white hover:border-yellow-500 transition-all shadow-lg"
 		>
 			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -73,15 +79,15 @@
 						type="submit"
 						class="w-full py-3 font-semibold rounded-lg transition-all {watchlist.has(data.movie.id) ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300'}"
 					>
-						{watchlist.has(data.movie.id) ? '♥ Retirer de la Watchlist' : '♡ Ajouter à la Watchlist'}
+						{watchlist.has(data.movie.id) ? '♥ Retirer des films vus' : '♡ Ajouter aux films vus'}
 					</button>
 				</form>
 			{:else}
 				<a
 					href="/login"
-					class="block w-full py-3 text-center bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-lg transition-all"
+					class="block w-full py-3 text-center bg-gradient-to-r from-yellow-500 to-amber-600 text-white font-semibold rounded-lg transition-all"
 				>
-					Connectez-vous pour ajouter à la Watchlist
+					Connectez-vous pour ajouter aux films vus
 				</a>
 			{/if}
 		</div>
@@ -135,7 +141,7 @@
 							href={data.movie.homepage}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="block text-cyan-400 hover:text-cyan-300 truncate transition-colors"
+							class="block text-yellow-400 hover:text-yellow-300 truncate transition-colors"
 						>
 							{data.movie.homepage}
 						</a>

@@ -1,8 +1,11 @@
+// definitions de types lies a tmdb
+// un genre de film avec id et nom
 export interface Genre {
 	id: number
 	name: string
 }
 
+// donnees de base d'un film depuis tmdbb
 export interface Movie {
 	id: number
 	title: string
@@ -15,6 +18,7 @@ export interface Movie {
 	popularity: number
 }
 
+// donnees detaillees d'un film avec genres et infos supplementaires
 export interface MovieDetail extends Omit<Movie, 'genre_ids'> {
 	tagline: string | null
 	runtime: number | null
@@ -26,6 +30,7 @@ export interface MovieDetail extends Omit<Movie, 'genre_ids'> {
 	vote_count: number
 }
 
+// reponse paginee de l'api tmdb
 export interface TMDBResponse {
 	results: Movie[]
 	total_pages: number
@@ -33,6 +38,7 @@ export interface TMDBResponse {
 	page: number
 }
 
+// definition d'une collection de films
 export interface CollectionDef {
 	slug: string
 	name: string
@@ -43,6 +49,7 @@ export interface CollectionDef {
 	maxMovies?: number
 }
 
+// collection avec progression et apercus d'affiches
 export interface CollectionWithPreview extends CollectionDef {
 	movieCount: number
 	watchedCount: number
